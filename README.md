@@ -16,4 +16,4 @@ Use Waku Message Version 1 encryption to encrypt all communications.
 
 ## 4. Connect to custom nwaku node
 
-WIP
+Use the `bootstrap.peers` property on `Waku.create` to connect to a custom node.
