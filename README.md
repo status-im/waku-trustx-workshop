@@ -1,6 +1,8 @@
 # Waku Workshop at TrustX - DevConnect 2022
 
-Open the index.html with your browser and enjoy the decentralized, censorship-resistant experience.
+Open the [index.html](https://github.com/status-im/waku-trustx-workshop/blob/master/index.html) file with your browser and enjoy the decentralized, censorship-resistant experience.
+
+ps: Once you have opened the file in GitHub, you can click on _preview_ to run the app.
 
 ## 1. Send and Receive Messages in a simple JavaScript + HTML app
 
