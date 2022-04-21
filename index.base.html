@@ -11,8 +11,9 @@
 <body>
 
 <div class="container">
+<div><h1 class="position-relative top-0 start-50 translate-middle-x">Simple Waku-JS Chat</h1></div>
 <hr/>
-<div><h1>Waku Node Status</h1></div>
+<div><h3>Waku Node Status</h3></div>
 <div id='status'></div>
 <input id='textInput' placeholder='Type your message here' type='text'>
 <button class='btn btn-primary' id='sendButton' onclick='sendMessage();' type='button'>Send Message
@@ -51,7 +52,7 @@
      *
      */
 
-    const {Waku, WakuMessage, utils} = jswaku;
+    const {Waku, WakuMessage} = jswaku;
     const statusDiv = document.getElementById('status');
     const messagesDiv = document.getElementById('messages');
     const textInput = document.getElementById('textInput');
@@ -75,10 +76,6 @@
     try {
         statusDiv.innerHTML = '<p>Starting</p>';
 
-        // https://js-waku.wakuconnect.dev/modules/utils.html#keccak256Buf
-        const password = "trustx";
-        const secretKey = utils.keccak256Buf(password)
-
         // Create and starts a Waku node.
         // `default: true` bootstraps by connecting to pre-defined/hardcoded Waku nodes.
         // We are currently working on migrating this method to DNS Discovery.
@@ -91,25 +88,11 @@
                 //     "/ip4/192.168.1.10/tcp/9000/ws/p2p/Q..."
                 // ]
             },
-            libp2p: {
-                config: {
-                    pubsub: {
-                        enabled: true,
-                        emitSelf: true,
-                    },
-                },
-            },
         }).catch(e => {
                 statusDiv.innerHTML = 'Error';
                 console.log('Issue starting Waku node', e);
             }
         ).then(wakuNode => {
-
-            // Had the decryption key to all receiving protocols (relay, store)
-            //
-            // https://js-waku.wakuconnect.dev/classes/waku.Waku.html#addDecryptionKey
-            wakuNode.addDecryptionKey(secretKey, "symmetric");
-
             // Had a hook to process all incoming messages on a specified content topic.
             //
             // https://js-waku.wakuconnect.dev/classes/waku_relay.WakuRelay.html#addObserver
@@ -142,28 +125,6 @@
                     statusDiv.innerHTML = 'Failed to connect to peers: ' + e.toString();
                 })
                 .then(() => {
-
-                    const endTime = new Date();
-                    const startTime = new Date();
-                    startTime.setTime(endTime - 24 * 60 * 60 * 1000);
-
-                    // https://js-waku.wakuconnect.dev/classes/waku_store.WakuStore.html#queryHistory
-                    wakuNode.store.queryHistory([contentTopic], {
-                        timeFilter: {
-                            startTime,
-                            endTime,
-                        },
-                        callback: (messages) => {
-                            messages.forEach(message => {
-                                if (!message.payload)
-                                    return;
-
-                                const text = message.payloadAsUtf8;
-                                messagesDiv.innerHTML = `<p>${text}</p><br />` + messagesDiv.innerHTML;
-                            })
-                        }
-                    })
-
                     // We are now connected to a remote peer, let's define the `sendMessage`
                     // function that sends the text input over Waku Relay, the gossipsub
                     // protocol.
@@ -181,9 +142,7 @@
                         // serialize a data structure.
                         //
                         // https://js-waku.wakuconnect.dev/classes/waku_message.WakuMessage.html#fromUtf8String
-                        WakuMessage.fromUtf8String(text, contentTopic, {
-                            symKey: secretKey
-                        }).catch(e => console.log('Error encoding message', e)).then(
+                        WakuMessage.fromUtf8String(text, contentTopic).catch(e => console.log('Error encoding message', e)).then(
                             wakuMessage => {
                                 // Once the message is constructed, send it over Waku Relay.
                                 //

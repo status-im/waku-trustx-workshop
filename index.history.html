@@ -51,7 +51,7 @@
      *
      */
 
-    const {Waku, WakuMessage, utils} = jswaku;
+    const {Waku, WakuMessage} = jswaku;
     const statusDiv = document.getElementById('status');
     const messagesDiv = document.getElementById('messages');
     const textInput = document.getElementById('textInput');
@@ -75,10 +75,6 @@
     try {
         statusDiv.innerHTML = '<p>Starting</p>';
 
-        // https://js-waku.wakuconnect.dev/modules/utils.html#keccak256Buf
-        const password = "trustx";
-        const secretKey = utils.keccak256Buf(password)
-
         // Create and starts a Waku node.
         // `default: true` bootstraps by connecting to pre-defined/hardcoded Waku nodes.
         // We are currently working on migrating this method to DNS Discovery.
@@ -91,25 +87,11 @@
                 //     "/ip4/192.168.1.10/tcp/9000/ws/p2p/Q..."
                 // ]
             },
-            libp2p: {
-                config: {
-                    pubsub: {
-                        enabled: true,
-                        emitSelf: true,
-                    },
-                },
-            },
         }).catch(e => {
                 statusDiv.innerHTML = 'Error';
                 console.log('Issue starting Waku node', e);
             }
         ).then(wakuNode => {
-
-            // Had the decryption key to all receiving protocols (relay, store)
-            //
-            // https://js-waku.wakuconnect.dev/classes/waku.Waku.html#addDecryptionKey
-            wakuNode.addDecryptionKey(secretKey, "symmetric");
-
             // Had a hook to process all incoming messages on a specified content topic.
             //
             // https://js-waku.wakuconnect.dev/classes/waku_relay.WakuRelay.html#addObserver
@@ -154,7 +136,7 @@
                             endTime,
                         },
                         callback: (messages) => {
-                            messages.forEach(message => {
+                            messages.reverse().forEach(message => {
                                 if (!message.payload)
                                     return;
 
@@ -181,9 +163,7 @@
                         // serialize a data structure.
                         //
                         // https://js-waku.wakuconnect.dev/classes/waku_message.WakuMessage.html#fromUtf8String
-                        WakuMessage.fromUtf8String(text, contentTopic, {
-                            symKey: secretKey
-                        }).catch(e => console.log('Error encoding message', e)).then(
+                        WakuMessage.fromUtf8String(text, contentTopic).catch(e => console.log('Error encoding message', e)).then(
                             wakuMessage => {
                                 // Once the message is constructed, send it over Waku Relay.
                                 //
